@@ -4,7 +4,7 @@ let socket = null;
 
 export const initializeSocket = (userId) => {
   if (!socket) {
-    socket = io('http://localhost:5000', {
+    socket = io('https://service-hive.onrender.com', {
       withCredentials: true,
     });
 
