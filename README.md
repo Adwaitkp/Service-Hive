@@ -105,7 +105,7 @@ The frontend will run on `http://localhost:5173`
 - `PATCH /api/bids/:bidId/hire` - Hire a freelancer (protected)
 - `GET /api/bids/user/my-bids` - Get user's submitted bids (protected)
 
-## 💡 How It Works
+##  How It Works
 
 ### Posting a Gig
 1. User logs in/registers

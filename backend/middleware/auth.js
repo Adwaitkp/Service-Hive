@@ -4,8 +4,14 @@ const User = require('../models/User');
 const protect = async (req, res, next) => {
   let token;
 
-  // Check for token in cookies
-  if (req.cookies.token) {
+  // Prefer Authorization: Bearer <token>
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  // Fallback: token in cookies
+  if (!token && req.cookies?.token) {
     token = req.cookies.token;
   }
 

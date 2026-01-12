@@ -4,6 +4,11 @@ import axios from '../../utils/axios';
 // Check if user is authenticated
 export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWithValue }) => {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Silent unauthenticated state on first load
+      return rejectWithValue(null);
+    }
     const response = await axios.get('/auth/me');
     return response.data;
   } catch (error) {
@@ -70,7 +75,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.error = action.payload;
+        state.error = action.payload ?? null;
       })
       // Register
       .addCase(register.pending, (state) => {
@@ -79,7 +84,14 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
+        if (action.payload?.token) {
+          localStorage.setItem('token', action.payload.token);
+        }
+        state.user = {
+          _id: action.payload?._id,
+          name: action.payload?.name,
+          email: action.payload?.email,
+        };
         state.error = null;
       })
       .addCase(register.rejected, (state, action) => {
@@ -93,7 +105,14 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
+        if (action.payload?.token) {
+          localStorage.setItem('token', action.payload.token);
+        }
+        state.user = {
+          _id: action.payload?._id,
+          name: action.payload?.name,
+          email: action.payload?.email,
+        };
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
@@ -102,6 +121,7 @@ const authSlice = createSlice({
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
+        localStorage.removeItem('token');
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;

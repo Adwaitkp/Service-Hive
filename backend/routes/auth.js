@@ -36,11 +36,13 @@ router.post('/register', async (req, res) => {
     if (user) {
       const token = generateToken(user._id);
 
+      const isProd = process.env.NODE_ENV === 'production';
+
       // Set HttpOnly cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
@@ -48,6 +50,7 @@ router.post('/register', async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        token,
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -81,11 +84,13 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user._id);
 
+    const isProd = process.env.NODE_ENV === 'production';
+
     // Set HttpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
@@ -93,6 +98,7 @@ router.post('/login', async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -103,6 +109,8 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: new Date(0),
   });
   res.json({ message: 'Logged out successfully' });
