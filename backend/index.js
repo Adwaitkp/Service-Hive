@@ -13,7 +13,7 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://frontend-mbwc.onrender.com',
     credentials: true,
   }
 });
@@ -26,7 +26,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'https://frontend-mbwc.onrender.com',
   credentials: true,
 }));
 app.use(express.json());
