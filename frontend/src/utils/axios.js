@@ -4,10 +4,18 @@ const API_URL = 'https://service-hive.onrender.com/api';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// 🔥 Attach token automatically
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default axiosInstance;
