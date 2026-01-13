@@ -9,6 +9,7 @@ A full-stack mini-freelance marketplace where clients can post jobs (Gigs) and f
 - **Gig Management**: Browse, search, and post job opportunities
 - **Bidding System**: Freelancers can submit proposals with custom pricing
 - **Hiring Logic**: Atomic hiring process that automatically handles bid status updates
+- **Real-time Notifications**: Socket.IO notifies freelancers instantly when they get hired
 - **Responsive UI**: Modern design with Tailwind CSS
 
 ##  Tech Stack
@@ -23,6 +24,7 @@ A full-stack mini-freelance marketplace where clients can post jobs (Gigs) and f
 ### Backend
 - Node.js & Express.js
 - MongoDB with Mongoose
+- Socket.IO (real-time notifications)
 - JWT authentication
 - bcrypt for password hashing
 - CORS and cookie-parser middleware
@@ -127,6 +129,36 @@ The frontend will run on `http://localhost:5173`
    - Gig status → `assigned`
    - All other pending bids → `rejected`
 
+### Real-time Hire Notification (Socket.IO)
+When a client hires a freelancer, the freelancer gets an instant in-app toast notification.
+
+- Backend initializes Socket.IO on the same HTTP server and assigns each user to a personal room.
+- Frontend connects once after login and emits `authenticate` with the user id.
+- Backend emits a `hired` event to the hired freelancer’s room.
+
+Event flow:
+
+1. Frontend connects to Socket.IO
+2. Frontend emits: `authenticate(userId)`
+3. Server joins the socket to room: `<userId>`
+4. On hire, server emits: `io.to(<userId>).emit('hired', payload)`
+
+##  Bonus: Race-condition Safe Hiring ("Race Thing")
+Hiring is implemented to be safe even if multiple hire requests happen at almost the same time.
+
+- The gig is updated using an atomic conditional update: only a gig with `status: 'open'` can be transitioned to `assigned`.
+- If the gig is already `assigned`, the hire request fails gracefully (prevents double-hire).
+- The hired bid is updated only if it is still `pending`.
+- A unique compound index on bids prevents the same freelancer from bidding twice on the same gig.
+
+##  Notes for Local Development
+This repo is currently configured with production URLs for CORS and Socket.IO:
+
+- Backend CORS/Socket.IO origin is set to `https://frontend-mbwc.onrender.com`
+- Frontend Socket.IO client connects to `https://service-hive.onrender.com`
+
+If you run locally, update those URLs to `http://localhost:5173` (frontend) and `http://localhost:5000` (backend), or refactor them to environment variables.
+
 ##  Project Structure
 
 ```
@@ -153,7 +185,8 @@ Service hive/
     ├── src/
     │   ├── components/
     │   │   ├── Navbar.jsx
-    │   │   └── PrivateRoute.jsx
+    │   │   ├── PrivateRoute.jsx
+    │   │   └── SocketManager.jsx
     │   ├── pages/
     │   │   ├── Home.jsx
     │   │   ├── Login.jsx
@@ -170,7 +203,8 @@ Service hive/
     │   │   │   └── bidSlice.js
     │   │   └── store.js
     │   ├── utils/
-    │   │   └── axios.js
+    │   │   ├── axios.js
+    │   │   └── socket.js
     │   ├── App.jsx
     │   ├── main.jsx
     │   └── index.css
